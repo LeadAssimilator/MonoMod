@@ -6,7 +6,7 @@ RUN apt-get update \
  && apt-get install --no-install-recommends -y \
         apt-transport-https software-properties-common \
         git git-lfs curl wget bash \
-        mono-runtime \
+        ca-certificates-mono mono-runtime mono-utils mono-gac mono-devel \
  && add-apt-repository ppa:dotnet/backports \
  && wget -q https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb \
  && dpkg -i packages-microsoft-prod.deb \
