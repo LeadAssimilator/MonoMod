@@ -3,6 +3,7 @@ on:
   push:
     paths:
       - 'build/containers/*.dockerfile'
+      - '.github/workflows/containers.yml'
   pull_request_target:
     paths:
       - 'build/containers/*.dockerfile'
