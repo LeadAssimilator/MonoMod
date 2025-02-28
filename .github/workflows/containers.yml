@@ -33,7 +33,7 @@ jobs:
     - name: Build and push missing Docker images
       run: |
         $files = gci build/containers/*.dockerfile;
-        for ($f in $files)
+        foreach ($f in $files)
         {
           $name = [System.IO.Path]::GetFileNameWithoutExtension($f.Name);
           $hash = (Get-FileHash -Algorithm SHA256 $f).Hash;
