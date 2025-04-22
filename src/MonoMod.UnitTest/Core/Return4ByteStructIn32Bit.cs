@@ -7,6 +7,7 @@ using Xunit.Abstractions;
 
 namespace MonoMod.UnitTest.Core
 {
+    [Obsolete("This test is replaced by DetouringMethodsReturningStructs")]
     public class Return4ByteStructIn32Bit : TestBase
     {
         public Return4ByteStructIn32Bit(ITestOutputHelper helper) : base(helper)
