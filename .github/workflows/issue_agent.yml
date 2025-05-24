@@ -129,4 +129,4 @@ jobs:
 
     - name: Respond to issue
       if: steps.issue_resp.outcome == 'success'
-      run: gh issue comment "${{ inputs.issue_number }}" --body "${{ steps.issue_resp.outputs.contents }}"
+      run: gh issue comment "${{ inputs.issue_number }}" --body-file /tmp/gh_issue_response
