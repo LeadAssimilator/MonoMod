@@ -2,12 +2,16 @@ using MonoMod.Utils;
 using Xunit;
 using Mono.Cecil.Cil;
 using MonoMod.Core.Platforms;
-using System;
+using Xunit.Abstractions;
 
 namespace MonoMod.UnitTest.Github
 {
-    public class Issue229_CalliInstructionTest
+    public class Issue229_CalliInstructionTest : TestBase
     {
+        public Issue229_CalliInstructionTest(ITestOutputHelper helper) : base(helper)
+        {
+        }
+
         [Fact]
         public void CalliInstructionShouldCompileWithoutException()
         {
