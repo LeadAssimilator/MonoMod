@@ -32,8 +32,28 @@ namespace MonoMod.Core.Platforms.Systems
 
         public static TypeClassification ClassifyARM64(Type type, bool isReturn)
         {
-            // delegate to AMD64 since it seems to be the same for ARM64.
-            return ClassifyAMD64(type, isReturn);
+            // ARM64 uses a byref ret buf in x8 if the return size is > 16, but there is no way to model this
+            // currently so just return InRegister for now so the return buffer fixup is effectively disabled
+            if (!isReturn)
+            {
+                var totalSize = type.GetManagedSize();
+                if (totalSize > 16)
+                {
+                    if (totalSize > 32)
+                        return TypeClassification.OnStack;
+
+                    var isMemory = SysVIsMemoryCache.GetValue(
+                        type,
+                        static t => new StrongBox<bool>(AnyFieldsNotFloat(t))
+                    ).Value;
+                    if (isMemory)
+                    {
+                        return TypeClassification.OnStack;
+                    }
+                }
+            }
+
+            return TypeClassification.InRegister;
         }
 
         private static bool AnyFieldsNotFloat(Type type)

@@ -80,12 +80,6 @@ namespace MonoMod.Core.Platforms.Runtimes
             }
         }
 
-        private static TypeClassification ClassifyRyuJitARM(Type type, bool isReturn)
-        {
-            // delegate to X86 since it seems to be the same for ARM.
-            return ClassifyRyuJitX86(type, isReturn);
-        }
-
         protected FxCoreBaseRuntime()
         {
             switch (PlatformDetection.Architecture)
@@ -96,13 +90,6 @@ namespace MonoMod.Core.Platforms.Runtimes
                     AbiCore = new Abi(
                         new[] { SpecialArgumentKind.ThisPointer, SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.UserArguments, SpecialArgumentKind.GenericContext },
                         ClassifyRyuJitX86,
-                        ReturnsReturnBuffer: true
-                    );
-                    break;
-                case ArchitectureKind.Arm:
-                    AbiCore = new Abi(
-                        new[] { SpecialArgumentKind.ThisPointer, SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.UserArguments, SpecialArgumentKind.GenericContext },
-                        ClassifyRyuJitARM,
                         ReturnsReturnBuffer: true
                     );
                     break;
@@ -119,8 +106,10 @@ namespace MonoMod.Core.Platforms.Runtimes
 
         protected static Abi AbiForCoreFx45ARM64(Abi baseAbi)
         {
-            // delegate to X64 since it seems to be the same for ARM64.
-            return AbiForCoreFx45X64(baseAbi);
+            return baseAbi with
+            {
+                ArgumentOrder = new[] { SpecialArgumentKind.ThisPointer, SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.GenericContext, SpecialArgumentKind.UserArguments },
+            };
         }
 
         private static readonly Type? RTDynamicMethod =
