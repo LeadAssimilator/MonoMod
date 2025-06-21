@@ -43,7 +43,6 @@ namespace MonoMod.Core.Platforms.Systems
                     break;
                 case ArchitectureKind.Arm64:
                     Features = SystemFeature.RXPages;
-                    // As best, I could research – macOS on Apple Silicon uses the same config as SystemV on x64
                     DefaultAbi = new Abi(
                         new[]
                         {
@@ -52,7 +51,7 @@ namespace MonoMod.Core.Platforms.Systems
                             SpecialArgumentKind.UserArguments
                         },
                         SystemVABI.ClassifyARM64,
-                        true
+                        false
                     );
                     MacOSArm64Helper.Initialize();
                     break;
@@ -110,21 +109,13 @@ namespace MonoMod.Core.Platforms.Systems
 
         public unsafe void PatchData(PatchTargetKind targetKind, IntPtr patchTarget, ReadOnlySpan<byte> data, Span<byte> backup)
         {
-
             // targetKind is a hint for what the caller believes the memory to be. Because MacOS is more strict than Linux or Windows,
             // we need to actually check that to behave correctly in all cases.
 
-            //var selfTask = mach_task_self();
             var len = data.Length;
 
-            //bool memIsRead;
             bool memIsWrite;
             bool memIsExec;
-
-            // we assume these defaults; this may end up blowing up completely
-            //var canMakeRead = true;
-            //var canMakeWrite = true;
-            //var canMakeExec = true;
 
             if (TryGetProtForMem(patchTarget, len, out _/*var maxProt*/, out var curProt, out var crossesBoundary, out var notAllocated))
             {
@@ -133,12 +124,8 @@ namespace MonoMod.Core.Platforms.Systems
                     MMDbgLog.Warning($"Patch requested for memory which spans multiple memory allocations. Failures may result. (0x{patchTarget:x16} length {len})");
                 }
 
-                //memIsRead = curProt.Has(vm_prot_t.Read);
                 memIsWrite = curProt.Has(vm_prot_t.Write);
                 memIsExec = curProt.Has(vm_prot_t.Execute) || (targetKind is PatchTargetKind.Executable);
-                //canMakeRead = maxProt.Has(vm_prot_t.Read);
-                //canMakeWrite = maxProt.Has(vm_prot_t.Write);
-                //canMakeExec = maxProt.Has(vm_prot_t.Execute);
             }
             else
             {
@@ -149,8 +136,8 @@ namespace MonoMod.Core.Platforms.Systems
                     MMDbgLog.Error($"Requested patch of region which was not fully allocated (0x{patchTarget:x16} length {len})");
                     throw new InvalidOperationException("Cannot patch unallocated region"); // TODO: is there a better exception for this?
                 }
+
                 // otherwise, assume based on what the caller gave us
-                //memIsRead = true;
                 memIsWrite = false;
                 memIsExec = targetKind is PatchTargetKind.Executable;
             }
@@ -549,14 +536,9 @@ namespace MonoMod.Core.Platforms.Systems
             var soname = arch.Target switch
             {
                 ArchitectureKind.x86_64 => "exhelper_macos_x86_64.dylib",
-                ArchitectureKind.Arm64 => null,
+                ArchitectureKind.Arm64 => "exhelper_macos_arm64.dylib",
                 _ => throw new NotImplementedException($"No exception helper for current arch")
             };
-
-            if (soname is null)
-            {
-                return null;
-            }
 
             // we want to get a temp file, write our helper to it, and load it
             var templ = ArrayPool<byte>.Shared.Rent(NEHTempl.Length + 1);

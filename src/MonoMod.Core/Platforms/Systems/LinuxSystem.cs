@@ -53,7 +53,7 @@ namespace MonoMod.Core.Platforms.Systems
                     defaultAbi = new Abi(
                         new[] { SpecialArgumentKind.ReturnBuffer, SpecialArgumentKind.ThisPointer, SpecialArgumentKind.UserArguments },
                         SystemVABI.ClassifyARM64,
-                        true
+                        false
                     );
                     break;
                 default:
@@ -389,14 +389,9 @@ namespace MonoMod.Core.Platforms.Systems
             var soname = arch.Target switch
             {
                 ArchitectureKind.x86_64 => "exhelper_linux_x86_64.so",
-                ArchitectureKind.Arm64 => null,
+                ArchitectureKind.Arm64 => "exhelper_linux_arm64.so",
                 _ => throw new NotImplementedException($"No exception helper for current arch")
             };
-
-            if (soname is null)
-            {
-                return null;
-            }
 
             // we want to get a temp file, write our helper to it, and load it
             var templ = ArrayPool<byte>.Shared.Rent(NEHTempl.Length + 1);
