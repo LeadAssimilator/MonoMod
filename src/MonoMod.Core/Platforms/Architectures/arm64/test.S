@@ -1,3 +1,5 @@
+// clang++ ../shared/test.cpp test.S exhelper_linux_macos_arm64.S
+
 #include "asm.inc"
 
 .text
