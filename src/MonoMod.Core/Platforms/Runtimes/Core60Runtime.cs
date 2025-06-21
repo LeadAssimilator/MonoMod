@@ -312,7 +312,7 @@ namespace MonoMod.Core.Platforms.Runtimes
                 return AllocMemExceptionHelperCache.GetOrAdd(ptr, p => (Runtime.EHManagedToNative(p, out var h), h)).M2N;
             }
 
-            public unsafe void AllocMemHook(IntPtr thisPtr, V70.AllocMemArgs* args)
+            public unsafe void AllocMemHook(IntPtr thisPtr, V60.AllocMemArgs* args)
             {
                 if (thisPtr == IntPtr.Zero)
                     return;
