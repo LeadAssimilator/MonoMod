@@ -277,3 +277,43 @@ LOCAL_LABEL(p_ret):
     .cfi_def_cfa_offset 0
     ret
     .cfi_endproc
+
+#if defined(__APPLE__)
+C_FUNC(eh_jit_memcpy):
+    .cfi_startproc
+    LSDA(_LSDA_none)
+    stp x22, x21, [sp, #-48]!
+    stp x20, x19, [sp, #16]
+    stp x29, x30, [sp, #32]
+    .cfi_def_cfa_offset 48
+    .cfi_offset x30, -8
+    .cfi_offset x29, -16
+    .cfi_offset x19, -24
+    .cfi_offset x20, -32
+    .cfi_offset x21, -40
+    .cfi_offset x22, -48
+    add x29, sp, #32
+    mov x20, x0
+    mov x21, x1
+    mov x22, x2
+    mov w0, #0
+    bl EXTERNAL_C_FUNC(pthread_jit_write_protect_np)
+    mov x0, x20
+    mov x1, x21
+    mov x2, x22
+    bl EXTERNAL_C_FUNC(memcpy)
+    mov w0, #1
+    bl EXTERNAL_C_FUNC(pthread_jit_write_protect_np)
+    ldp x29, x30, [sp, #32]
+    ldp x20, x19, [sp, #16]
+    ldp x22, x21, [sp], #48
+    .cfi_restore x30
+    .cfi_restore x29
+    .cfi_restore x19
+    .cfi_restore x20
+    .cfi_restore x21
+    .cfi_restore x22
+    .cfi_def_cfa_offset 0
+    ret
+    .cfi_endproc
+#endif
