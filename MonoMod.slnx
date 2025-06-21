@@ -13,7 +13,10 @@
     <Project Path="build/setup-mono/setup-mono.csproj" />
   </Folder>
   <Folder Name="/external/">
-    <Project Path="external/iced.csproj" />
+    <Project Path="external/iced.csproj">
+      <BuildType Solution="DebugTrace|*" Project="Debug" />
+      <BuildType Solution="ReleaseTrace|*" Project="Release" />
+    </Project>
   </Folder>
   <Folder Name="/Solution Items/">
     <File Path=".editorconfig" />
