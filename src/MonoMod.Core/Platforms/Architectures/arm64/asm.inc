@@ -19,12 +19,17 @@
 #define LSDA(name) .cfi_lsda 0x1b, name
 #endif
 
-.macro LOAD_EXTERNAL_VAR Reg, Name
+.macro LOAD_EXTERNAL Reg, Name
 #if defined(__APPLE__)
     adrp \Reg, C_FUNC(\Name)@GOTPAGE
     ldr \Reg, [\Reg, C_FUNC(\Name)@GOTPAGEOFF]
 #else
+    adrp \Reg, :got:C_FUNC(\Name)
+    ldr \Reg, [\Reg, :got_lo12:C_FUNC(\Name)]
+#endif
+.endm
+
+.macro LOAD_INTERNAL Reg, Name
     adrp \Reg, C_FUNC(\Name)
     add \Reg, \Reg, :lo12:C_FUNC(\Name)
-#endif
 .endm

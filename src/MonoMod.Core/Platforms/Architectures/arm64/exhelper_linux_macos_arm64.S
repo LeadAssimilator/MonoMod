@@ -1,4 +1,4 @@
-// Linux: clang exhelper_linux_macos_arm64.S -o exhelper_linux_arm64.so    -shared -Wl,-x,--eh-frame-hdr,-z,now,-z,noexecstack -nodefaultlibs
+// Linux: clang exhelper_linux_macos_arm64.S -o exhelper_linux_arm64.so    -shared -Wl,-x,--eh-frame-hdr,-z,now,-z,noexecstack,-z,noseparate-code,-z,norelro,--build-id=none -nodefaultlibs -nostdlib -s -fuse-ld=lld
 // MacOS: clang exhelper_linux_macos_arm64.S -o exhelper_macos_arm64.dylib -shared -Wl,-x -mmacosx-version-min=12
 
 #include "asm.inc"
@@ -77,7 +77,7 @@ C_FUNC(eh_get_exception_ptr):
     ldr x19, [x0]
     blr x19
 #else
-    ldr x0, =tlskey
+    LOAD_INTERNAL x0, tlskey
     ldr x0, [x0]
     mov x20, x0
     bl EXTERNAL_C_FUNC(pthread_getspecific)
@@ -125,8 +125,8 @@ LOCAL_LABEL(egep_init):
 _eh_init_tlskey:
     stp x29, x30, [sp, #-16]!
     mov x29, sp
-    ldr x0, =tlskey
-    ldr x1, =free
+    LOAD_INTERNAL x0, tlskey
+    LOAD_EXTERNAL x1, free
     bl EXTERNAL_C_FUNC(pthread_key_create)
     cbnz x0, LOCAL_LABEL(eit_error)
 LOCAL_LABEL(eit_ret):

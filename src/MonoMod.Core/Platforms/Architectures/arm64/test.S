@@ -8,9 +8,9 @@
 .p2align 2
 
 C_FUNC(px_call_throwex):
-    LOAD_EXTERNAL_VAR x9, throwex
+    LOAD_EXTERNAL x9, throwex
     b EXTERNAL_C_FUNC(eh_managed_to_native)
 
 C_FUNC(px_call_caller):
-    LOAD_EXTERNAL_VAR x9, caller
+    LOAD_EXTERNAL x9, caller
     b EXTERNAL_C_FUNC(eh_native_to_managed)
