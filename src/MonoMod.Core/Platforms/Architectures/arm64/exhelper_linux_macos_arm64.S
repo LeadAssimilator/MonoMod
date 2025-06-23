@@ -1,4 +1,4 @@
-// Linux: clang exhelper_linux_macos_arm64.S -o exhelper_linux_arm64.so    -shared -Wl,-x,--eh-frame-hdr,-z,now,-z,noexecstack
+// Linux: clang exhelper_linux_macos_arm64.S -o exhelper_linux_arm64.so    -shared -Wl,-x,--eh-frame-hdr,-z,now,-z,noexecstack -nodefaultlibs
 // MacOS: clang exhelper_linux_macos_arm64.S -o exhelper_macos_arm64.dylib -shared -Wl,-x -mmacosx-version-min=12
 
 #include "asm.inc"
