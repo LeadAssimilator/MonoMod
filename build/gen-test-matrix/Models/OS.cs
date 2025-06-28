@@ -57,7 +57,7 @@ internal sealed record OS : Enableable
 
             Arch = [
                 new() { RidName = "x64", UnityName = "linux64", IsRunnerArch = true },
-                new() { RidName = "arm64", UnityName = "linux_arm64" },
+                new() { RidName = "arm64", UnityName = null, Enabled = false }, // Linux supports ARM64, but 1. we don't, and 2. Actions doesn't
             ]
         },
         new()
@@ -73,7 +73,7 @@ internal sealed record OS : Enableable
 
             Arch = [
                 new() { RidName = "x64", UnityName = "linux64", IsRunnerArch = true },
-                new() { RidName = "arm64", UnityName = "linux_arm64" },
+                new() { RidName = "arm64", UnityName = null, Enabled = false }, // Linux supports ARM64, but 1. we don't, and 2. Actions doesn't
             ]
         },
         new()
