@@ -35,7 +35,7 @@ elseif ($IsLinux)
     $corePattern = Join-Path $dumpsPath "dump_%e_%p.core";
     Write-Output ($Args -join "`n") | bash -c @"
 set -eo pipefail;
-echo "\n$corePattern" | sudo -S tee /proc/sys/kernel/core_pattern;
+echo "$corePattern" | sudo tee /proc/sys/kernel/core_pattern;
 ulimit -c unlimited;
 ulimit -t 600; # hard-limit the program to take no more than 10 minutes (nothing we will use this for needs anywhere near that much; any more is a problem)
 set +e;
@@ -55,7 +55,8 @@ sysctl "kern.corefile=$corePattern";
 ulimit -c unlimited;
 ulimit -t 600; # hard-limit the program to take no more than 10 minutes (nothing we will use this for needs anywhere near that much; any more is a problem)
 set +e;
-xargs lldb -o "process handle SIGXCPU --stop true --notify true" -o "run" -k "process save-core -s full -- $(Join-Path $dumpsPath 'dump_timeout.core')" -k "kill" -o "quit" -- "$Exe";
+# on MacOS, SIGXCPU doesn't coredump by default. Thus, we use LLDB unattended to perform the dump 
+xargs lldb -b -o "run" -k "process save-core -s full -- '$(Join-Path $dumpsPath 'dump_crash.core')'" -k "kill" -- "$Exe";
 exit `$?;
 "@;
     exit $LastExitCode;

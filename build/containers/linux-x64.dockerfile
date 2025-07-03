@@ -27,7 +27,9 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # Then, user
-RUN useradd -rm -d /home/runner -s /bin/bash -g root -G sudo -u 1001 runner
+RUN useradd -rm -d /home/runner -s /bin/bash -g root -G sudo -u 1001 runner \
+    && echo "runner ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/runner \
+    && chmod 0440 /etc/sudoers.d/runner
 USER runner
 WORKDIR /home/runner
 

@@ -25,7 +25,9 @@ RUN curl -L \
  && rm /tmp/powershell.tar.gz
  
 # Then, user
-RUN adduser -D -h /home/runner -s /bin/bash -u 1001 runner wheel && echo "runner ALL=(ALL) ALL" > /etc/sudoers.d/runner && chmod 0440 /etc/sudoers.d/runner
+RUN adduser -D -h /home/runner -s /bin/bash -u 1001 runner wheel \
+    && echo "runner ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/runner \
+    && chmod 0440 /etc/sudoers.d/runner
 USER runner
 WORKDIR /home/runner
 
