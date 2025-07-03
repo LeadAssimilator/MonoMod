@@ -19,9 +19,9 @@ namespace MonoMod.Core.Platforms.Systems
         /// Singleton instance created by a call to <see cref="Initialize"/>.
         /// </summary>
         public static MacOSArm64Helper? Instance { get; private set; }
-        
-        private const string TempFileNameTmpl = "/tmp/mm-macos-silicon-helper.dylib.XXXXXX";
+
         private const string LogicalName = "helper_macos_arm64.dylib";
+        private const string TempFileNameTmpl = "/tmp/mm-macos-silicon-helper.dylib.XXXXXX";
         private const string JitMemCpyExport = "mmch_jit_memcpy";
         private const string JitHookConfigExport = "mmch_jit_hook_config";
 
@@ -32,7 +32,7 @@ namespace MonoMod.Core.Platforms.Systems
         private MacOSArm64Helper(string fileName)
         {
             _handle = DynDll.OpenLibrary(fileName);
-            
+
             try
             {
                 _jitMemCpy = DynDll.GetExport(_handle, JitMemCpyExport);
@@ -57,7 +57,7 @@ namespace MonoMod.Core.Platforms.Systems
         public unsafe void JitMemCpy(IntPtr dst, IntPtr src, ulong size)
         {
             var fnPtr = (delegate* unmanaged[Cdecl]<IntPtr, IntPtr, ulong, void>)_jitMemCpy;
-            
+
             fnPtr(dst, src, size);
         }
 
@@ -75,7 +75,7 @@ namespace MonoMod.Core.Platforms.Systems
         private static void CreateTempFile(string tmpl, out int fd, out string fileName)
         {
             var tmplName = ArrayPool<byte>.Shared.Rent(tmpl.Length + 1);
-            
+
             try
             {
                 unsafe
@@ -117,12 +117,27 @@ namespace MonoMod.Core.Platforms.Systems
 
         private static string GetTempFileFromEmbeddedResources(string logicalName)
         {
+            // Filestream with non-Mono internal created file descriptors do not work. See:
+            // https://github.com/mono/mono/issues/12783
+            if (PlatformDetection.Runtime is RuntimeKind.Mono)
+            {
+                var tempFilePath = $"{Path.GetTempPath()}{logicalName}.{AssemblyInfo.AssemblyVersion}";
+                
+                using var embedded = Assembly.GetExecutingAssembly().GetManifestResourceStream(logicalName);
+                Helpers.Assert(embedded is not null);
+
+                using var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write);
+                embedded.CopyTo(fileStream);
+                
+                return tempFilePath;
+            }
+
             CreateTempFile(TempFileNameTmpl, out var fd, out var fileName);
             ExtractEmbeddedResourcesToTempFile(fd, logicalName);
 
             return fileName;
         }
-        
+
         /// <summary>
         /// Creates Native Helper
         /// </summary>
@@ -130,11 +145,11 @@ namespace MonoMod.Core.Platforms.Systems
         public static void Initialize()
         {
             Helpers.Assert(Instance is null);
-            
-            MMDbgLog.Trace($"{nameof(MacOSArm64Helper)} has been initialized.");
 
             var fileName = File.Exists(LogicalName) ? LogicalName : GetTempFileFromEmbeddedResources(LogicalName);
             Instance = new MacOSArm64Helper(fileName);
+
+            MMDbgLog.Trace($"{nameof(MacOSArm64Helper)} has been initialized.");
         }
     }
 }
