@@ -15,10 +15,13 @@ namespace MonoMod.Core.Interop
         public static extern int GetPageSize();
 
         [DllImport(LibSystem, EntryPoint = "sys_icache_invalidate")]
-        public static unsafe extern void sys_icache_invalidate(void* start, nuint size);
+        public static extern void sys_icache_invalidate(void* start, nuint size);
 
         [DllImport(LibSystem, CallingConvention = CallingConvention.Cdecl, EntryPoint = "mkstemp")]
-        public static extern unsafe int MkSTemp(byte* template);
+        public static extern int MkSTemp(byte* template);
+
+        [DllImport(LibSystem, CallingConvention = CallingConvention.Cdecl, EntryPoint = "close")]
+        public static extern int Close(int fd);
 
         [DllImport(LibSystem, CallingConvention = CallingConvention.Cdecl, EntryPoint = "__error")]
         public static extern unsafe int* __error();

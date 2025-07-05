@@ -44,6 +44,7 @@ namespace MonoMod.Core.Platforms.Systems
             catch
             {
                 DynDll.CloseLibrary(_handle);
+                File.Delete(fileName);
                 throw;
             }
         }
@@ -103,37 +104,37 @@ namespace MonoMod.Core.Platforms.Systems
             }
         }
 
-        private static void ExtractEmbeddedResourcesToTempFile(int fd, string logicalName)
+        private static void ExtractEmbeddedResourcesToTempFile(FileStream stream, string logicalName)
         {
-            using (var handle = new SafeFileHandle((IntPtr)fd, true))
-            using (var stream = new FileStream(handle, FileAccess.Write))
-            {
-                using var embedded = Assembly.GetExecutingAssembly().GetManifestResourceStream(logicalName);
-                Helpers.Assert(embedded is not null);
+            using var embedded = Assembly.GetExecutingAssembly().GetManifestResourceStream(logicalName);
+            Helpers.Assert(embedded is not null);
 
-                embedded.CopyTo(stream);
-            }
+            embedded.CopyTo(stream);
         }
 
         private static string GetTempFileFromEmbeddedResources(string logicalName)
         {
-            // Filestream with non-Mono internal created file descriptors do not work. See:
-            // https://github.com/mono/mono/issues/12783
+            CreateTempFile(TempFileNameTmpl, out var fd, out var fileName);
             if (PlatformDetection.Runtime is RuntimeKind.Mono)
             {
-                var tempFilePath = $"{Path.GetTempPath()}{logicalName}.{AssemblyInfo.AssemblyVersion}";
-                
-                using var embedded = Assembly.GetExecutingAssembly().GetManifestResourceStream(logicalName);
-                Helpers.Assert(embedded is not null);
+                // FileStream cannot work with P/Invoked file descriptor and SafeFileHandle.
+                // See: https://github.com/mono/mono/issues/12783
+                // Thus, try to close the file descriptor manually.
+                var error = OSX.Close(fd);
+                if (error != 0)
+                {
+                    MMDbgLog.Warning($"Could not close file descriptor {fileName}: {error}");
+                }
 
-                using var fileStream = new FileStream(tempFilePath, FileMode.Create, FileAccess.Write);
-                embedded.CopyTo(fileStream);
-                
-                return tempFilePath;
+                using var stream = new FileStream(fileName, FileMode.Truncate, FileAccess.Write);
+                ExtractEmbeddedResourcesToTempFile(stream, logicalName);
             }
-
-            CreateTempFile(TempFileNameTmpl, out var fd, out var fileName);
-            ExtractEmbeddedResourcesToTempFile(fd, logicalName);
+            else
+            {
+                using var handle = new SafeFileHandle((IntPtr)fd, true);
+                using var stream = new FileStream(handle, FileAccess.Write);
+                ExtractEmbeddedResourcesToTempFile(stream, logicalName);
+            }
 
             return fileName;
         }
