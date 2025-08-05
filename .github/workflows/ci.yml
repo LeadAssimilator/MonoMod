@@ -13,6 +13,7 @@ env:
   DOTNET_TELEMETRY_OPTOUT: true
   DOTNET_NOLOGO: true
   NUGET_PACKAGES: ${{github.workspace}}/artifacts/pkg
+  RestoreLockedMode: true
   
 # If new commits are pushed, don't bother finishing the current run.
 concurrency:
@@ -69,8 +70,8 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ${{ env.NUGET_PACKAGES }}
-        key: ${{ runner.os }}-nuget-v1-${{ hashFiles('**/*.csproj', '**/*.props', '**/*.targets', 'nuget.config', 'global.json') }}
-        restore-keys: ${{ runner.os }}-nuget-v1-
+        key: ${{ runner.os }}-nuget-setup-v2-${{ hashFiles('build/gen-test-matrix/packages.lock.json') }}
+        restore-keys: ${{ runner.os }}-nuget-v2-${{ hashFiles('**/packages.lock.json') }}
 
     - name: Compute test matrix
       if: steps.skip_check.outputs.should_skip != 'true'
