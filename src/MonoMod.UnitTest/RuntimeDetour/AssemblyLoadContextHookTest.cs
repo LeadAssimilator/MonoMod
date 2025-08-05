@@ -43,9 +43,12 @@ namespace MonoMod.UnitTest
 
             IsNonALC = true;
 
-            WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(0, 0));
-            WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(1, 1));
-            WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(1, 2));
+            WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(0, 0, true));
+            WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(1, 1, true));
+            WaitForWeakReferenceToDie(TestAssemblyLoadContextHookStep(1, 2, true));
+            TestAssemblyLoadContextHookStep(0, 0, false);
+            TestAssemblyLoadContextHookStep(1, 1, false);
+            TestAssemblyLoadContextHookStep(1, 2, false);
         }
 
         private static void WaitForWeakReferenceToDie(WeakReference weakref)
@@ -74,7 +77,7 @@ namespace MonoMod.UnitTest
             LastID2 = -1;
         }
 
-        private WeakReference TestAssemblyLoadContextHookStep(int id1, int id2)
+        private WeakReference TestAssemblyLoadContextHookStep(int id1, int id2, bool canCollect)
         {
             AssemblyLoadContext alc = new TestAssemblyLoadContext($"Test Context #{id1}");
 
@@ -86,7 +89,7 @@ namespace MonoMod.UnitTest
             Verify(null, -1, -1);
 
             type.GetMethod("TestAssemblyLoadContextHookLoaded", BindingFlags.Public | BindingFlags.Static)
-                .Invoke(null, new object[] { this, id1, id2 });
+                .Invoke(null, new object[] { this, id1, id2, canCollect });
 
             alc.Unload();
 
@@ -111,7 +114,7 @@ namespace MonoMod.UnitTest
         // Everything below this comment should only run in the loaded ALCs.
 
         // This method runs in the loaded ALC.
-        public static void TestAssemblyLoadContextHookLoaded(object loader, int id1, int id2)
+        public static void TestAssemblyLoadContextHookLoaded(object loader, int id1, int id2, bool canCollect)
         {
             Assert.NotEqual(typeof(AssemblyLoadContextHookTest), loader.GetType());
             var method = loader.GetType().GetMethod("TestStaticMethod");
@@ -202,7 +205,12 @@ namespace MonoMod.UnitTest
             verify.Invoke(loader, argsSet);
 
             TestILHookReferences(loader.GetType(), loader.GetType());
-            //TestILHookReferences(loader.GetType(), typeof(AssemblyLoadContextHookTest));
+            if (!canCollect)
+            {
+                // AssemblyLoadContextHookTest.ILHookTarget will be hooked,
+                // so DetourManager will reference it, prevents it from being collected.
+                TestILHookReferences(loader.GetType(), typeof(AssemblyLoadContextHookTest));
+            }
         }
 
         public static void TestStaticMethodTarget(Action<object, int, int> orig, object loader, int id1, int id2)
