@@ -1,4 +1,4 @@
-FROM --platform=linux/amd64 ubuntu:24.04
+FROM --platform=linux/arm64 ubuntu:24.04
 
 # First, packages
 RUN apt-get update \
@@ -17,10 +17,6 @@ RUN apt-get update \
         nodejs \
         dotnet-runtime-9.0 \
         powershell \
-# Dependencies for older runtimes
- && wget -O libssl1.1.deb http://security.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2.24_amd64.deb \
- && dpkg -i libssl1.1.deb \
- && rm libssl1.1.deb \
  && apt-get remove -y apt-transport-https software-properties-common \
  && apt-get autoremove -y \
  && apt-get clean \
