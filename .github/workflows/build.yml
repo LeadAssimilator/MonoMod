@@ -37,7 +37,7 @@ jobs:
     name: Build
     env:
       LOG_FILE_NAME: testresults.${{ inputs.os }}.auxtests.trx
-      VersionSuffix: ${{ !inputs.no-suffix && inputs.version }}
+      VersionSuffix: ${{ !inputs.no-suffix && inputs.version || '' }}
       DoNotAddSuffix: ${{ inputs.no-suffix && '1' }}
       RestoreLockedMode: true
     steps:
