@@ -1,7 +1,8 @@
 <Project>
   
   <PropertyGroup>
-    <_ZigToolsetPackageName>Vezel.Zig.Toolsets.$(NETCoreSdkPortableRuntimeIdentifier)</_ZigToolsetPackageName>
+    <!-- Zig doesn't need separate -musl variants; it's libc is fully static -->
+    <_ZigToolsetPackageName>Vezel.Zig.Toolsets.$([System.String]::Copy($(NETCoreSdkPortableRuntimeIdentifier)).Replace('-musl', ''))</_ZigToolsetPackageName>
     <_ZigToolsetPackageVersion>0.14.1.1</_ZigToolsetPackageVersion>
 
     <_ZigToolsetPackageNameLower>$([System.String]::Copy($(_ZigToolsetPackageName)).ToLowerInvariant())</_ZigToolsetPackageNameLower>
