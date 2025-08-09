@@ -8,10 +8,6 @@ on:
         description: Dry Run
         type: boolean
         default: true
-      package-base-name:
-        description: The base name of the package to use instead of MonoMod
-        type: string
-        default: ""
       prerelease:
         description: This is a prerelease
         type: boolean
@@ -88,7 +84,6 @@ jobs:
       osname: Linux
       version: ${{ inputs.prerelease-str }}
       no-suffix: ${{ !inputs.prerelease }}
-      package-base-name: ${{ inputs.package-base-name }}
       upload-packages: true
       upload-tests: true
 

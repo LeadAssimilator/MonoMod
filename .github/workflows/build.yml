@@ -21,9 +21,6 @@ on:
       upload-tests:
         type: boolean
         default: false
-      package-base-name:
-        type: string
-        default: ""
   
 defaults:
   run:
@@ -42,8 +39,7 @@ jobs:
       LOG_FILE_NAME: testresults.${{ inputs.os }}.auxtests.trx
       VersionSuffix: ${{ !inputs.no-suffix && inputs.version }}
       DoNotAddSuffix: ${{ inputs.no-suffix && '1' }}
-      BuildPackageBaseName: ${{ inputs.package-base-name }}
-      RestoreLockedMode: ${{ inputs.package-base-name == '' }}
+      RestoreLockedMode: true
     steps:
     - name: Configure git
       run: |
