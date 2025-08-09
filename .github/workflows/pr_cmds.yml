@@ -37,7 +37,6 @@ jobs:
         allow_forks: true
         skip_ci: true
         skip_reviews: true
-        skip_completing: true
 
     - name: Check command '/lockfile'
       uses: github/command@v2
@@ -50,7 +49,6 @@ jobs:
         allow_forks: true
         skip_ci: true
         skip_reviews: true
-        skip_completing: true
         
     - uses: actions/github-script@v3
       id: get-pr
