@@ -27,31 +27,31 @@ namespace MonoMod.Core.Platforms.Systems
             return TypeClassification.InRegister;
         }
 
-        public static TypeClassification ClassifyARM64(Type type, bool isReturn) => ClassifyAMD64(type, isReturn);
-        //{
-        //    // ARM64 uses a byref ret buf in x8 if the return size is > 16, but there is no way to model this
-        //    // currently so just return InRegister for now so the return buffer fixup is effectively disabled
-        //    if (!isReturn)
-        //    {
-        //        var totalSize = type.GetManagedSize();
-        //        if (totalSize > 16)
-        //        {
-        //            if (totalSize > 32)
-        //                return TypeClassification.OnStack;
+        public static TypeClassification ClassifyARM64(Type type, bool isReturn)
+        {
+            // ARM64 uses a byref ret buf in x8 if the return size is > 16, but there is no way to model this
+            // currently so just return InRegister for now so the return buffer fixup is effectively disabled
+            if (!isReturn)
+            {
+                var totalSize = type.GetManagedSize();
+                if (totalSize > 16)
+                {
+                    if (totalSize > 32)
+                        return TypeClassification.OnStack;
 
-        //            var isMemory = SysVIsMemoryCache.GetValue(
-        //                type,
-        //                static t => new StrongBox<bool>(AnyFieldsNotFloat(t))
-        //            ).Value;
-        //            if (isMemory)
-        //            {
-        //                return TypeClassification.OnStack;
-        //            }
-        //        }
-        //    }
+                    var isMemory = SysVIsMemoryCache.GetValue(
+                        type,
+                        static t => new StrongBox<bool>(AnyFieldsNotFloat(t))
+                    ).Value;
+                    if (isMemory)
+                    {
+                        return TypeClassification.OnStack;
+                    }
+                }
+            }
 
-        //    return TypeClassification.InRegister;
-        //}
+            return TypeClassification.InRegister;
+        }
 
         private static readonly StrongBox<bool> SBTrue = new(true);
         private static readonly StrongBox<bool> SBFalse = new(false);
