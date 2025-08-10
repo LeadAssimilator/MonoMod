@@ -26,8 +26,8 @@
     <ItemGroup>
       <_MM_ObjToLib Include="$(_MM_OS)" ExtraOpts="$(_MM_ExtraOpts) @(_MM_LinkerOpts->'%(Identity)',' ')"
           TargetTriple="$(_MM_Target)" Ext="$(_MM_Ext)"
-          Lib="$(IntermediateOutputPath)/arm64/$(_MM_OS).$(_MM_Ext)"
-          Objs="@(_MM_Tmp->'$(IntermediateOutputPath)/arm64/$(_MM_OS)/%(Filename)%(Extension).o')" />
+          Lib="$(IntermediateOutputPath)arm64/$(_MM_OS).$(_MM_Ext)"
+          Objs="@(_MM_Tmp->'$(IntermediateOutputPath)arm64/$(_MM_OS)/%(Filename)%(Extension).o')" />
     </ItemGroup>
 
   </Target>
@@ -40,14 +40,14 @@
 
     <ItemGroup>
       <_MM_SrcToObj>
-        <ObjPath>$(IntermediateOutputPath)/arm64/%(OS)/%(Filename)%(Extension).o</ObjPath>
+        <ObjPath>$(IntermediateOutputPath)arm64/%(OS)/%(Filename)%(Extension).o</ObjPath>
       </_MM_SrcToObj>
     </ItemGroup>
 
   </Target>
 
   <Target Name="_MM_CompileObjects" DependsOnTargets="_MM_PrepareHelperCompilationItems"
-      Inputs="$(MSBuildThisFile);%(_MM_SrcToObj.Identity)" Outputs="%(_MM_SrcToObj.ObjPath)">
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildThisFileDirectory)BuildHelper.props;%(_MM_SrcToObj.Identity)" Outputs="%(_MM_SrcToObj.ObjPath)">
 
     <PropertyGroup>
       <_Target>%(_MM_SrcToObj.TargetTriple)</_Target>
@@ -61,24 +61,35 @@
       <_ExeArgs Include="cc"/>
       <_ExeArgs Include="-target"/>
       <_ExeArgs Include="$(_Target)"/>
+      <_ExeArgs Include="-fdiagnostics-format=msvc" />
+      <_ExeArgs Include="-v"/>
       <_ExeArgs Include="-c"/>
-      <_ExeArgs Include="-g" Condition="'$(Configuration)' == 'Debug'" />
       <_ExeArgs Include="-o"/>
       <_ExeArgs Include="$(_Obj)"/>
       <_ExeArgs Include="$(_Src)"/>
     </ItemGroup>
+    
+    <ItemGroup Condition="'$(Optimize)' == 'false'">
+      <_ExeArgs Include="-g" />
+      <_ExeArgs Include="-O1" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(Optimize)' == 'true'">
+      <_ExeArgs Include="-O3" />
+    </ItemGroup>
 
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(_Obj)))" />
-    <Exec Command="&quot;$(ZigExePath)&quot; @(_ExeArgs->'&quot;%(Identity)&quot;',' ') $(_Opts)" ConsoleToMSBuild="true" ContinueOnError="true">
+    <Exec Command="&quot;$(ZigExePath)&quot; @(_ExeArgs->'&quot;%(Identity)&quot;',' ') $(_Opts)" ConsoleToMSBuild="true" IgnoreExitCode="true"
+        YieldDuringToolExecution="true">
       <Output TaskParameter="ExitCode" PropertyName="_MM_ExitCode" />
     </Exec>
     <Delete Files="$(_Obj)" Condition="'$(_MM_ExitCode)' != '0'" />
-    <Error Text="Failed to compile $(_Out)" Condition="'$(_MM_ExitCode)' != '0'" />
+    <Error Text="Failed to compile $(_Src)" Condition="'$(_MM_ExitCode)' != '0'" />
 
   </Target>
 
   <Target Name="_MM_CompileLibs" DependsOnTargets="_MM_PrepObjToLib;_MM_CompileObjects" BeforeTargets="SplitResourcesByCulture"
-      Inputs="$(MSBuildThisFile);%(_MM_ObjToLib.Objs)" Outputs="%(_MM_ObjToLib.Lib)">
+      Inputs="$(MSBuildThisFileFullPath);$(MSBuildThisFileDirectory)BuildHelper.props;%(_MM_ObjToLib.Objs)" Outputs="%(_MM_ObjToLib.Lib)">
     
     <PropertyGroup>
       <_OS>%(_MM_ObjToLib.Identity)</_OS>
@@ -94,14 +105,27 @@
       <_ExeArgs Include="cc"/>
       <_ExeArgs Include="-target"/>
       <_ExeArgs Include="$(_Target)"/>
-      <_ExeArgs Include="-g" Condition="'$(Configuration)' == 'Debug'" />
+      <_ExeArgs Include="-fdiagnostics-format=msvc" />
+      <_ExeArgs Include="-v"/>
       <_ExeArgs Include="-o"/>
       <_ExeArgs Include="$(_Out)"/>
       <_ExeArgs Include="$(_Obj)"/>
     </ItemGroup>
 
+    <ItemGroup Condition="'$(Optimize)' == 'false'">
+      <_ExeArgs Include="-g" />
+      <_ExeArgs Include="-O1" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(Optimize)' == 'true'">
+      <_ExeArgs Include="-Wl,-x" />
+      <_ExeArgs Include="-s" />
+      <_ExeArgs Include="-O3" />
+    </ItemGroup>
+
     <MakeDir Directories="$([System.IO.Path]::GetDirectoryName($(_Out)))" />
-    <Exec Command="&quot;$(ZigExePath)&quot; @(_ExeArgs->'&quot;%(Identity)&quot;',' ') $(_Opts)" ConsoleToMSBuild="true" ContinueOnError="true">
+    <Exec Command="&quot;$(ZigExePath)&quot; @(_ExeArgs->'&quot;%(Identity)&quot;',' ') $(_Opts)" ConsoleToMSBuild="true" IgnoreExitCode="true"
+        YieldDuringToolExecution="true">
       <Output TaskParameter="ExitCode" PropertyName="_MM_ExitCode" />
     </Exec>
     <Delete Files="$(_Out)" Condition="'$(_MM_ExitCode)' != '0'" />
