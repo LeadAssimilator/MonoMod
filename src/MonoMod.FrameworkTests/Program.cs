@@ -96,7 +96,7 @@ unsafe
         Console.WriteLine(msvcrand());
     }
 
-    if (PlatformTriple.Current.SupportedFeatures.Architecture.Has(ArchitectureFeature.CreateAltEntryPoint))
+    if (NativeHook.CanCallOriginal)
     {
         using (new NativeHook((IntPtr)msvcrand, (RandHook)MixRand))
         {

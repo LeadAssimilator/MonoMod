@@ -426,6 +426,10 @@ namespace MonoMod.Core.Platforms
         /// Creates a <see cref="NativeDetour"/>. This is basically identical to <see cref="CreateSimpleDetour(IntPtr, IntPtr, int, IntPtr)"/>,
         /// except that it generates an alternate entrypoint for <paramref name="from"/>.
         /// </summary>
+        /// <remarks>
+        /// This method will always create an alternate entrypoint in <see cref="NativeDetour.AltEntry"/> when <see cref="ArchitectureFeature.CreateAltEntryPoint"/>
+        /// is available.
+        /// </remarks>
         /// <param name="from">The address to detour.</param>
         /// <param name="to">The target of the detour.</param>
         /// <param name="detourMaxSize">The maximum size available for the detour.</param>

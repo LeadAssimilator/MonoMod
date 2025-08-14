@@ -2,7 +2,6 @@ using MonoMod.Core.Utils;
 using MonoMod.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace MonoMod.Core.Platforms.Architectures

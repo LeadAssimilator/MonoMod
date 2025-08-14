@@ -10,7 +10,21 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
+    <Left>lib/net35/MonoMod.Core.dll</Left>
+    <Right>lib/net35/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:MonoMod.Core.Platforms.ISystem.GetNativeJitHookConfig(System.Int32)</Target>
+    <Left>lib/net452/MonoMod.Core.dll</Left>
+    <Right>lib/net452/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
     <Left>lib/net452/MonoMod.Core.dll</Left>
     <Right>lib/net452/MonoMod.Core.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -24,7 +38,21 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
+    <Left>lib/net5.0/MonoMod.Core.dll</Left>
+    <Right>lib/net5.0/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:MonoMod.Core.Platforms.ISystem.GetNativeJitHookConfig(System.Int32)</Target>
+    <Left>lib/net6.0/MonoMod.Core.dll</Left>
+    <Right>lib/net6.0/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
     <Left>lib/net6.0/MonoMod.Core.dll</Left>
     <Right>lib/net6.0/MonoMod.Core.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -38,7 +66,21 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
+    <Left>lib/net7.0/MonoMod.Core.dll</Left>
+    <Right>lib/net7.0/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:MonoMod.Core.Platforms.ISystem.GetNativeJitHookConfig(System.Int32)</Target>
+    <Left>lib/net8.0/MonoMod.Core.dll</Left>
+    <Right>lib/net8.0/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
     <Left>lib/net8.0/MonoMod.Core.dll</Left>
     <Right>lib/net8.0/MonoMod.Core.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
@@ -52,7 +94,21 @@
   </Suppression>
   <Suppression>
     <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
+    <Left>lib/net9.0/MonoMod.Core.dll</Left>
+    <Right>lib/net9.0/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
     <Target>M:MonoMod.Core.Platforms.ISystem.GetNativeJitHookConfig(System.Int32)</Target>
+    <Left>lib/netstandard2.0/MonoMod.Core.dll</Left>
+    <Right>lib/netstandard2.0/MonoMod.Core.dll</Right>
+    <IsBaselineSuppression>true</IsBaselineSuppression>
+  </Suppression>
+  <Suppression>
+    <DiagnosticId>CP0006</DiagnosticId>
+    <Target>P:MonoMod.Core.IDetourFactory.SupportsNativeDetourOrigEntrypoint</Target>
     <Left>lib/netstandard2.0/MonoMod.Core.dll</Left>
     <Right>lib/netstandard2.0/MonoMod.Core.dll</Right>
     <IsBaselineSuppression>true</IsBaselineSuppression>
