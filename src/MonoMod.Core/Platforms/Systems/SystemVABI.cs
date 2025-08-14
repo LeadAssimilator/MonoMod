@@ -29,21 +29,16 @@ namespace MonoMod.Core.Platforms.Systems
 
         public static TypeClassification ClassifyARM64(Type type, bool isReturn)
         {
-            // ARM64 uses a byref ret buf in x8 if the return size is > 16, but there is no way to model this
-            // currently so just return InRegister for now so the return buffer fixup is effectively disabled
-            //if (!isReturn)
+            var totalSize = type.GetManagedSize();
+            if (totalSize > 16)
             {
-                var totalSize = type.GetManagedSize();
-                if (totalSize > 16)
-                {
-                    if (totalSize > 32)
-                        return isReturn ? TypeClassification.ByReference : TypeClassification.OnStack;
+                if (totalSize > 32)
+                    return isReturn ? TypeClassification.ByReference : TypeClassification.OnStack;
 
-                    var isMemory = AnyFieldsNotFloat(type);
-                    if (isMemory)
-                    {
-                        return isReturn ? TypeClassification.ByReference : TypeClassification.OnStack;
-                    }
+                var isMemory = AnyFieldsNotFloat(type);
+                if (isMemory)
+                {
+                    return isReturn ? TypeClassification.ByReference : TypeClassification.OnStack;
                 }
             }
 
