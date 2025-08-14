@@ -1,6 +1,9 @@
 using MonoMod.Core.Utils;
 using MonoMod.Utils;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace MonoMod.Core.Platforms.Architectures
 {
@@ -101,7 +104,8 @@ namespace MonoMod.Core.Platforms.Architectures
 
             if (PlatformDetection.Runtime is RuntimeKind.Framework or RuntimeKind.CoreCLR)
             {
-                return new BytePatternCollection(
+                var patterns = new List<BytePattern>()
+                {
                     // .NET 6 Support
                     //
                     // StubPrecode
@@ -192,83 +196,111 @@ namespace MonoMod.Core.Platforms.Architectures
                               Bd,   Bd,   Bd,   Bd
                         }
                     ),
-                    // .NET 8 Support
-                    //
-                    // #define STUB_PAGE_SIZE 16384
-                    // #define DATA_SLOT(stub, field) (stub##Code + STUB_PAGE_SIZE + stub##Data__##field)
-                    //
-                    // FixupPrecodeCode
-                    new BytePattern(
-                        new AddressMeaning(AddressKind.Rel64 | AddressKind.ConstantAddr | AddressKind.Indirect, 0, 0x4000), mustMatchAtStart: true,
-                        new byte[]
-                        {
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                        },
-                        new byte[]
-                        {
-                            0x0b, 0x00, 0x02, 0x58, // ldr x11, DATA_SLOT(FixupPrecode, Target)
-                            0x60, 0x01, 0x1f, 0xd6, // br x11
-                            0x0c, 0x00, 0x02, 0x58, // ldr x12, DATA_SLOT(FixupPrecode, MethodDesc
-                            0x2b, 0x00, 0x02, 0x58, // ldr x11, DATA_SLOT(FixupPrecode, PrecodeFixupThunk)
-                            0x60, 0x01, 0x1f, 0xd6, // br x11
-                        }
-                    ),
-                    // FixupPrecodeCode ThePreStub entry point
-                    new BytePattern(
-                        new AddressMeaning(AddressKind.PrecodeFixupThunkRel64 | AddressKind.ConstantAddr | AddressKind.Indirect, 0, 0x4008), mustMatchAtStart: true,
-                        new byte[]
-                        {
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                        },
-                        new byte[]
-                        {
-                            0x0c, 0x00, 0x02, 0x58, // ldr x12, DATA_SLOT(FixupPrecode, MethodDesc)
-                            0x2b, 0x00, 0x02, 0x58, // ldr x11, DATA_SLOT(FixupPrecode, PrecodeFixupThunk)
-                            0x60, 0x01, 0x1f, 0xd6, // br x11
-                        }
-                    ),
-                    // CallCountingStubCode
-                    new BytePattern(
-                        new AddressMeaning(AddressKind.Rel64 | AddressKind.ConstantAddr | AddressKind.Indirect, 0, 0x4008), mustMatchAtStart: true,
-                        new byte[]
-                        {
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                            0xff, 0xff, 0xff, 0xff,
-                        },
-                        new byte[]
-                        {
-                            0x09, 0x00, 0x02, 0x58, // ldr  x9, DATA_SLOT(CallCountingStub, RemainingCallCountCell)
-                            0x2a, 0x01, 0x40, 0x79, // ldrh w10, [x9]
-                            0x4a, 0x05, 0x00, 0x71, // subs w10, w10, #1
-                            0x2a, 0x01, 0x00, 0x79, // strh w10, [x9]
-                            0x60, 0x00, 0x00, 0x54, // beq CountReachedZero
-                            0xa9, 0xff, 0x01, 0x58, // ldr  x9, DATA_SLOT(CallCountingStub, TargetForMethod)
-                            0x20, 0x01, 0x1f, 0xd6, // br   x9
-                                                    // CountReachedZero:
-                            0xaa, 0xff, 0x01, 0x58, // ldr  x10, DATA_SLOT(CallCountingStub, TargetForThresholdReached)
-                            0x40, 0x01, 0x1F, 0xD6, // br   x10
-                        }
-                    )
-                );
+                };
+
+                // .NET 7+ Support
+                //
+                // The precode helpers are generated for ALL of the page sizes below, and selected between dynamically according to the current system's page size.
+                // We can't be sure that whatever we pick up as the system page size (done dynamically) is the same as what the runtime is using here, so we generate
+                // patterns for all of them.
+                ReadOnlySpan<int> pageSizes = [4096, 8192, 16384, 32768, 65536]; // note: these are defined in src/coreclr/vm/arm64/thunktemplates.S
+
+                // #define DATA_SLOT(stub, field) (stub##Code + STUB_PAGE_SIZE + stub##Data__##field)
+                //
+                // FixupPrecodeCode
+                ReadOnlySpan<byte> fixupPrecodeCode = 
+                [
+                    0x0b, 0x00, 0x02, 0x58, // ldr x11, DATA_SLOT(FixupPrecode, Target) // +0
+                    0x60, 0x01, 0x1f, 0xd6, // br x11
+                    0x0c, 0x00, 0x02, 0x58, // ldr x12, DATA_SLOT(FixupPrecode, MethodDesc) // +8
+                    0x2b, 0x00, 0x02, 0x58, // ldr x11, DATA_SLOT(FixupPrecode, PrecodeFixupThunk) // +16
+                    0x60, 0x01, 0x1f, 0xd6, // br x11
+                ];
+                // CallCountingStubCode
+                ReadOnlySpan<byte> callCountingStubCode =
+                [
+                    0x09, 0x00, 0x02, 0x58, // ldr  x9, DATA_SLOT(CallCountingStub, RemainingCallCountCell) // +0
+                    0x2a, 0x01, 0x40, 0x79, // ldrh w10, [x9]
+                    0x4a, 0x05, 0x00, 0x71, // subs w10, w10, #1
+                    0x2a, 0x01, 0x00, 0x79, // strh w10, [x9]
+                    0x60, 0x00, 0x00, 0x54, // beq CountReachedZero
+                    0xa9, 0xff, 0x01, 0x58, // ldr  x9, DATA_SLOT(CallCountingStub, TargetForMethod) // +8
+                    0x20, 0x01, 0x1f, 0xd6, // br   x9
+                                            // CountReachedZero:
+                    0xaa, 0xff, 0x01, 0x58, // ldr  x10, DATA_SLOT(CallCountingStub, TargetForThresholdReached) // +16
+                    0x40, 0x01, 0x1F, 0xD6, // br   x10
+                ];
+
+                ReadOnlyMemory<byte> bigMask = (byte[])[
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                    0xff, 0xff, 0xff, 0xff,
+                ];
+
+                foreach (var pageSize in pageSizes)
+                {
+                    var fixupPrecode = fixupPrecodeCode.ToArray(); // create a copy to operate on
+                    EncodeLdr64LiteralTo(fixupPrecode.AsSpan(0), 0 + pageSize + 0, 11); // .Target (+0)
+                    EncodeLdr64LiteralTo(fixupPrecode.AsSpan(8), -8 + pageSize + 8, 12); // .MethodDesc (+8)
+                    EncodeLdr64LiteralTo(fixupPrecode.AsSpan(12), -12 + pageSize + 16, 11); // .PrecodeFixupThunk (+16)
+
+                    // we need to generate patterns for both entries
+                    // main one first
+                    patterns.Add(new BytePattern(
+                        new AddressMeaning(AddressKind.Rel64 | AddressKind.ConstantAddr | AddressKind.Indirect, relativeOffset: 0, constantValue: (uint)pageSize + 0),
+                        mustMatchAtStart: true,
+                        mask: bigMask.Slice(0, fixupPrecode.Length),
+                        pattern: fixupPrecode));
+                    // then the precode fixup entry
+                    patterns.Add(new BytePattern(
+                        new AddressMeaning(AddressKind.PrecodeFixupThunkRel64 | AddressKind.ConstantAddr | AddressKind.Indirect, relativeOffset: 0, constantValue: (uint)pageSize + 16 - 8),
+                        mustMatchAtStart: true,
+                        mask: bigMask.Slice(0, fixupPrecode.Length - 8),
+                        pattern: fixupPrecode.AsMemory(8)));
+
+                    // then the call counting stub
+                    var callCountingStub = callCountingStubCode.ToArray();
+                    EncodeLdr64LiteralTo(callCountingStub.AsSpan(0), 0 + pageSize + 0, 9); // .RemainingCallCountCell (+0)
+                    EncodeLdr64LiteralTo(callCountingStub.AsSpan(20), -20 + pageSize + 8, 9); // .TargetForMethod (+8)
+                    EncodeLdr64LiteralTo(callCountingStub.AsSpan(28), -28 + pageSize + 16, 9); // .TargetForThresholdReached (+16)
+
+                    patterns.Add(new BytePattern(
+                        new AddressMeaning(AddressKind.Rel64 | AddressKind.ConstantAddr | AddressKind.Indirect, relativeOffset: 0, constantValue: (uint)pageSize + 8),
+                        mustMatchAtStart: true,
+                        mask: bigMask.Slice(0, callCountingStub.Length),
+                        pattern: callCountingStub));
+                }
+
+                return new BytePatternCollection(patterns.ToArray());
             }
             else
             {
                 // TODO: Mono
                 return new();
             }
+        }
+
+        private static void EncodeLdr64LiteralTo(Span<byte> dest, int offset, byte reg)
+        {
+            Helpers.DAssert(dest.Length >= 4);
+            Helpers.DAssert((offset & 0b11) == 0);
+            Helpers.DAssert((offset & (~(((1 << 19) - 1) << 2))) == 0 || (-offset & (~(((1 << 19) - 1) << 2))) == 0);
+            Helpers.DAssert(reg is >= 0 and <= 30);
+
+            var imm19 = unchecked((uint)offset) >> 2;
+            imm19 &= (1 << 19) - 1;
+
+            uint opcode = 0x58000000;
+            opcode |= imm19 << 5;
+            opcode |= reg;
+
+            MemoryMarshal.Write(dest, ref opcode);
         }
 
         private sealed class BranchRegisterKind : DetourKindBase
